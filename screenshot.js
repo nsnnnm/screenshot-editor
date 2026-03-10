@@ -1,9 +1,10 @@
+```javascript
 (async()=>{
 
-if(window.__nsScreenshotTool)return
-window.__nsScreenshotTool=true
+if(window.__nsShot)return
+window.__nsShot=true
 
-/* html2canvasロード */
+/* html2canvas */
 if(!window.html2canvas){
 let s=document.createElement("script")
 s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
@@ -11,7 +12,7 @@ document.head.appendChild(s)
 await new Promise(r=>s.onload=r)
 }
 
-/* フラッシュ */
+/* flash */
 let flash=document.createElement("div")
 flash.style="position:fixed;inset:0;background:white;z-index:2147483646;opacity:0;transition:opacity .15s"
 document.body.appendChild(flash)
@@ -20,25 +21,36 @@ requestAnimationFrame(()=>flash.style.opacity=1)
 setTimeout(()=>flash.style.opacity=0,120)
 setTimeout(()=>flash.remove(),300)
 
-/* スクショ取得 */
+/* screenshot */
 let shot=await html2canvas(document.body)
 
-/* Shadow DOM root */
+/* root */
 const root=document.createElement("div")
-root.style.position="fixed"
-root.style.inset="0"
-root.style.zIndex="2147483647"
-
+root.style="position:fixed;inset:0;z-index:2147483647;pointer-events:none"
 document.body.appendChild(root)
 
 const shadow=root.attachShadow({mode:"open"})
 
-/* style */
 const style=document.createElement("style")
 style.textContent=`
 
-.overlay{
-position:absolute;
+.thumb{
+position:fixed;
+bottom:20px;
+right:20px;
+width:160px;
+border-radius:10px;
+box-shadow:0 10px 40px rgba(0,0,0,.6);
+cursor:pointer;
+transition:.25s;
+}
+
+.thumb:hover{
+transform:scale(1.05);
+}
+
+.editor{
+position:fixed;
 inset:0;
 background:rgba(0,0,0,.75);
 display:flex;
@@ -50,7 +62,6 @@ canvas{
 max-width:90vw;
 max-height:90vh;
 border-radius:12px;
-box-shadow:0 20px 60px rgba(0,0,0,.8);
 background:black;
 touch-action:none;
 }
@@ -65,7 +76,6 @@ padding:8px;
 border-radius:10px;
 display:flex;
 gap:8px;
-box-shadow:0 10px 30px rgba(0,0,0,.6);
 }
 
 button{
@@ -83,18 +93,32 @@ background:#444;
 }
 
 `
+
 shadow.appendChild(style)
 
-/* overlay */
-const overlay=document.createElement("div")
-overlay.className="overlay"
-shadow.appendChild(overlay)
+/* thumbnail */
+let thumb=document.createElement("img")
+thumb.className="thumb"
+thumb.src=shot.toDataURL()
+thumb.style.pointerEvents="auto"
+
+shadow.appendChild(thumb)
+
+/* open editor */
+thumb.onclick=()=>{
+
+thumb.remove()
+
+const editor=document.createElement("div")
+editor.className="editor"
+editor.style.pointerEvents="auto"
+shadow.appendChild(editor)
 
 /* canvas */
 const canvas=document.createElement("canvas")
 canvas.width=shot.width
 canvas.height=shot.height
-overlay.appendChild(canvas)
+editor.appendChild(canvas)
 
 const ctx=canvas.getContext("2d")
 ctx.drawImage(shot,0,0)
@@ -105,6 +129,7 @@ toolbar.className="toolbar"
 
 toolbar.innerHTML=`
 <button id="pen">✏</button>
+<button id="color">🎨</button>
 <button id="clear">🧹</button>
 <button id="save">💾</button>
 <button id="close">✕</button>
@@ -112,12 +137,13 @@ toolbar.innerHTML=`
 
 shadow.appendChild(toolbar)
 
-/* drawing */
+/* draw */
 let drawing=false
+let color="red"
 
 function pos(e){
-if(e.touches){
 let r=canvas.getBoundingClientRect()
+if(e.touches){
 return{
 x:e.touches[0].clientX-r.left,
 y:e.touches[0].clientY-r.top
@@ -136,8 +162,9 @@ ctx.moveTo(p.x,p.y)
 function move(e){
 if(!drawing)return
 let p=pos(e)
+
 ctx.lineTo(p.x,p.y)
-ctx.strokeStyle="red"
+ctx.strokeStyle=color
 ctx.lineWidth=4
 ctx.lineCap="round"
 ctx.stroke()
@@ -156,6 +183,11 @@ canvas.addEventListener("touchmove",move)
 canvas.addEventListener("touchend",end)
 
 /* buttons */
+
+shadow.getElementById("color").onclick=()=>{
+color=prompt("色を入力 (red / blue / yellow / #ff0000)",color)||color
+}
+
 shadow.getElementById("clear").onclick=()=>{
 ctx.drawImage(shot,0,0)
 }
@@ -169,7 +201,10 @@ a.click()
 
 shadow.getElementById("close").onclick=()=>{
 root.remove()
-window.__nsScreenshotTool=false
+window.__nsShot=false
 }
 
-})();
+}
+
+})()
+```
