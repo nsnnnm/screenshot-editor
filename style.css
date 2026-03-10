@@ -1,0 +1,30 @@
+body{
+margin:0;
+background:#111;
+font-family:sans-serif;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+#toolbar{
+background:#1e1e1e;
+padding:8px;
+display:flex;
+gap:8px;
+box-shadow:0 5px 20px rgba(0,0,0,.5);
+}
+
+button{
+background:#2c2c2c;
+color:white;
+border:none;
+padding:6px 10px;
+border-radius:8px;
+cursor:pointer;
+}
+
+canvas{
+flex:1;
+background:black;
+}
