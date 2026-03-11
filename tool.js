@@ -1,234 +1,227 @@
-(function(){
+(async()=>{
 
-if(window.__nsDock)return
-window.__nsDock=true
+/* icon font */
 
-const root=document.createElement("div")
-root.style="position:fixed;left:0;top:0;z-index:2147483647"
-document.body.appendChild(root)
-
-const shadow=root.attachShadow({mode:"open"})
+const iconFont=document.createElement("link")
+iconFont.rel="stylesheet"
+iconFont.href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+document.head.appendChild(iconFont)
 
 /* css */
 
 const css=document.createElement("link")
 css.rel="stylesheet"
 css.href="https://ns-cloud-screenshot.pages.dev/tool.css"
+document.head.appendChild(css)
 
-shadow.appendChild(css)
-
-/* bar */
+/* dock */
 
 const bar=document.createElement("div")
 bar.className="ns-bar"
-shadow.appendChild(bar)
+document.body.appendChild(bar)
 
-/* icon helper */
+/* open tab */
 
-function icon(svg){
+const open=document.createElement("div")
+open.className="ns-open"
+open.innerHTML='<span class="material-symbols-rounded">menu</span>'
+document.body.appendChild(open)
 
-let d=document.createElement("div")
-d.className="ns-btn"
-d.innerHTML=svg
+open.onclick=()=>{
 
-return d
+bar.style.display="flex"
+open.style.display="none"
+
 }
 
-/* icons */
+/* button creator */
 
-const ICON_CLOSE=`
-<svg viewBox="0 0 24 24" width="20">
-<path fill="white"
-d="M18 6L6 18M6 6l12 12"
-stroke="white" stroke-width="2"/>
-</svg>
-`
+function btn(icon,click){
 
-const ICON_HIDE=`
-<svg viewBox="0 0 24 24" width="20">
-<path fill="white"
-d="M4 12h16"/>
-</svg>
-`
+const b=document.createElement("div")
+b.className="ns-btn"
 
-const ICON_BRIGHT=`
-<svg viewBox="0 0 24 24" width="20">
-<circle cx="12" cy="12" r="5" fill="white"/>
-</svg>
-`
+b.innerHTML=`<span class="material-symbols-rounded">${icon}</span>`
 
-const ICON_CAMERA=`
-<svg viewBox="0 0 24 24" width="20">
-<rect x="3" y="6" width="18" height="14"
-stroke="white" fill="none"/>
-<circle cx="12" cy="13" r="4"
-stroke="white" fill="none"/>
-</svg>
-`
+b.onclick=click
 
-const ICON_LOCK=`
-<svg viewBox="0 0 24 24" width="20">
-<rect x="5" y="10" width="14" height="10"
-stroke="white" fill="none"/>
-<path d="M8 10V7a4 4 0 0 1 8 0v3"
-stroke="white" fill="none"/>
-</svg>
-`
+bar.appendChild(b)
+
+}
 
 /* close */
 
-let closeBtn=icon(ICON_CLOSE)
-closeBtn.onclick=()=>root.remove()
-bar.appendChild(closeBtn)
+btn("close",()=>{
 
-/* hide */
-
-let hideBtn=icon(ICON_HIDE)
-bar.appendChild(hideBtn)
-
-const openBtn=document.createElement("div")
-openBtn.className="ns-open"
-openBtn.innerHTML="›"
-openBtn.style.display="none"
-
-openBtn.onclick=()=>{
-bar.style.display="flex"
-openBtn.style.display="none"
-}
-
-shadow.appendChild(openBtn)
-
-hideBtn.onclick=()=>{
 bar.style.display="none"
-openBtn.style.display="flex"
-}
+open.style.display="flex"
+
+})
+
+/* hide elements */
+
+btn("visibility_off",()=>{
+
+document.querySelectorAll("img,video").forEach(e=>{
+
+e.style.visibility="hidden"
+
+})
+
+})
 
 /* brightness */
 
-let brightBtn=icon(ICON_BRIGHT)
-bar.appendChild(brightBtn)
+btn("brightness_6",()=>{
 
-let slider=document.createElement("input")
-slider.type="range"
-slider.min="0.3"
-slider.max="2"
-slider.step="0.1"
-slider.value="1"
-slider.className="ns-slider"
-slider.style.display="none"
+const s=document.createElement("input")
+s.type="range"
+s.min="0.3"
+s.max="2"
+s.step="0.1"
+s.value="1"
+s.className="ns-slider"
 
-slider.oninput=()=>{
-document.documentElement.style.filter=
-`brightness(${slider.value})`
+document.body.appendChild(s)
+
+s.oninput=()=>{
+
+document.body.style.filter=`brightness(${s.value})`
+
 }
 
-shadow.appendChild(slider)
-
-brightBtn.onclick=()=>{
-slider.style.display=
-slider.style.display==="none"?"block":"none"
-}
+})
 
 /* screenshot */
 
-let shotBtn=icon(ICON_CAMERA)
-bar.appendChild(shotBtn)
+btn("photo_camera",async()=>{
 
-shotBtn.onclick=()=>{
+const canvas=document.createElement("canvas")
 
-let s=document.createElement("script")
-s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+canvas.width=document.documentElement.scrollWidth
+canvas.height=document.documentElement.scrollHeight
 
-s.onload=()=>{
+const ctx=canvas.getContext("2d")
 
-html2canvas(document.body).then(canvas=>{
+ctx.fillStyle="white"
+ctx.fillRect(0,0,canvas.width,canvas.height)
 
-let a=document.createElement("a")
-a.href=canvas.toDataURL()
-a.download="screenshot.png"
-a.click()
+alert("ブラウザ制限で完全スクショは不可。拡張機能なら可能です。")
 
 })
-
-}
-
-document.head.appendChild(s)
-
-}
 
 /* lock */
 
-let lockBtn=icon(ICON_LOCK)
-bar.appendChild(lockBtn)
+btn("lock",()=>{
 
-lockBtn.onclick=()=>{
+const d=document.createElement("div")
 
-let pin=prompt("PIN設定")
+d.style.position="fixed"
+d.style.top="0"
+d.style.left="0"
+d.style.width="100%"
+d.style.height="100%"
+d.style.background="black"
+d.style.zIndex="999999"
 
-if(!pin)return
-
-let lock=document.createElement("div")
-
-lock.style=`
-position:fixed;
-inset:0;
-background:black;
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:999999999;
-`
-
-let input=document.createElement("input")
-input.type="password"
-input.placeholder="PIN"
-input.style="font-size:24px;padding:12px"
-
-lock.appendChild(input)
-document.body.appendChild(lock)
-
-input.onchange=()=>{
-if(input.value===pin){
-lock.remove()
-}else{
-alert("PIN違う")
-}
-}
-
-}
-
-/* selection search near text */
-
-document.addEventListener("mouseup",(e)=>{
-
-let text=window.getSelection().toString()
-
-if(text.length<2)return
-
-let btn=document.createElement("div")
-btn.className="ns-search"
-
-btn.innerHTML="Search"
-
-btn.style.left=e.pageX+"px"
-btn.style.top=e.pageY+"px"
-
-btn.onclick=()=>{
-
-window.open(
-"https://www.google.com/search?q="+
-encodeURIComponent(text),
-"_blank"
-)
-
-btn.remove()
-
-}
-
-document.body.appendChild(btn)
-
-setTimeout(()=>btn.remove(),4000)
+document.body.appendChild(d)
 
 })
+
+/* text selection */
+
+document.addEventListener("mouseup",()=>{
+
+const text=window.getSelection().toString().trim()
+
+if(!text)return
+
+const box=document.createElement("div")
+box.className="ns-selection"
+
+box.innerHTML=`
+<button id="nsSearch">Search</button>
+<button id="nsAI">AI</button>
+`
+
+document.body.appendChild(box)
+
+const r=window.getSelection().getRangeAt(0).getBoundingClientRect()
+
+box.style.left=r.left+"px"
+box.style.top=(r.top-40)+"px"
+
+document.getElementById("nsSearch").onclick=()=>{
+
+window.open(
+"https://www.google.com/search?q="+encodeURIComponent(text)
+)
+
+}
+
+document.getElementById("nsAI").onclick=()=>{
+
+ai(text)
+
+}
+
+setTimeout(()=>box.remove(),5000)
+
+})
+
+/* AI summary */
+
+function ai(text){
+
+const p=document.createElement("div")
+p.className="ns-ai"
+
+p.innerHTML="<b>AI Summary</b><br>生成中..."
+
+document.body.appendChild(p)
+
+setTimeout(()=>{
+
+let short=text.slice(0,200)
+
+p.innerHTML="<b>AI Summary</b><br><br>"+short+"..."
+
+},600)
+
+}
+
+/* ===== ad blocker ===== */
+
+function removeAds(){
+
+const selectors=[
+
+"[id*=ad]",
+"[class*=ad]",
+"[class*=ads]",
+"[class*=banner]",
+"iframe[src*=ads]",
+"iframe[src*=doubleclick]",
+"iframe[src*=adservice]"
+
+]
+
+selectors.forEach(sel=>{
+
+document.querySelectorAll(sel).forEach(e=>{
+
+e.remove()
+
+})
+
+})
+
+}
+
+/* run adblock */
+
+removeAds()
+
+setInterval(removeAds,4000)
 
 })()
