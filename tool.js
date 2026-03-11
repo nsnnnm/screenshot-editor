@@ -1,63 +1,47 @@
-javascript:(async()=>{
+window.NSTOOL = {};
 
-/* ========= prevent duplicate ========= */
+(function(){
 
-if(window.nsToolLoaded){
-alert("NS Tool already running")
-return
-}
-window.nsToolLoaded=true
+/* ------------------ ICON ------------------ */
 
-/* ========= icon font ========= */
+const icon=document.createElement("link");
+icon.rel="stylesheet";
+icon.href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded";
+document.head.appendChild(icon);
 
-const iconFont=document.createElement("link")
-iconFont.rel="stylesheet"
-iconFont.href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
-document.head.appendChild(iconFont)
+/* ------------------ CSS ------------------ */
 
-/* ========= html2canvas ========= */
-
-if(!window.html2canvas){
-const s=document.createElement("script")
-s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
-document.head.appendChild(s)
-}
-
-/* ========= style ========= */
-
-const style=document.createElement("style")
-style.innerHTML=`
-
-.ns-bar{
+const css=`
+.ns-dock{
 position:fixed;
-left:12px;
+left:10px;
 top:50%;
 transform:translateY(-50%);
 display:flex;
 flex-direction:column;
-gap:14px;
+gap:12px;
 padding:14px;
-border-radius:20px;
-background:rgba(30,30,30,.6);
-backdrop-filter:blur(16px);
+background:rgba(30,30,30,.65);
+backdrop-filter:blur(20px);
+border-radius:22px;
 z-index:999999;
 }
 
 .ns-btn{
-width:48px;
-height:48px;
+width:46px;
+height:46px;
 display:flex;
 align-items:center;
 justify-content:center;
 border-radius:14px;
+background:rgba(255,255,255,.08);
 cursor:pointer;
-background:rgba(255,255,255,.05);
-transition:transform .15s;
+transition:all .15s;
 }
 
 .ns-btn:hover{
-transform:scale(1.4);
-background:rgba(255,255,255,.2);
+transform:scale(1.45);
+background:rgba(255,255,255,.25);
 }
 
 .ns-btn span{
@@ -66,308 +50,248 @@ color:white;
 font-size:24px;
 }
 
-.ns-selection{
+.ns-select{
 position:absolute;
-display:flex;
-gap:6px;
 background:#111;
 color:white;
 padding:6px 8px;
-border-radius:8px;
+border-radius:10px;
+display:flex;
+gap:6px;
 z-index:999999;
-}
-
-.ns-selection button{
-background:#222;
-color:white;
-border:none;
-padding:5px 8px;
-border-radius:6px;
-cursor:pointer;
 }
 
 .ns-ai{
 position:fixed;
 right:20px;
 bottom:20px;
+width:300px;
 background:#111;
 color:white;
-padding:12px;
-border-radius:10px;
-width:260px;
+padding:14px;
+border-radius:12px;
 z-index:999999;
 }
 
-`
-document.head.appendChild(style)
+`;
+const style=document.createElement("style");
+style.innerHTML=css;
+document.head.appendChild(style);
 
-/* ========= dock ========= */
+/* ------------------ DOCK ------------------ */
 
-const bar=document.createElement("div")
-bar.className="ns-bar"
-document.body.appendChild(bar)
+const dock=document.createElement("div");
+dock.className="ns-dock";
+document.body.appendChild(dock);
 
-/* ========= button creator ========= */
+/* ------------------ BTN ------------------ */
 
-function btn(icon,click){
+function btn(icon,fn){
 
-const b=document.createElement("div")
-b.className="ns-btn"
-b.innerHTML=`<span class="material-symbols-rounded">${icon}</span>`
-b.onclick=click
+const b=document.createElement("div");
+b.className="ns-btn";
+b.innerHTML=`<span class="material-symbols-rounded">${icon}</span>`;
+b.onclick=fn;
 
-bar.appendChild(b)
-
-}
-
-/* ========= marker ========= */
-
-let drawing=false
-
-btn("draw",()=>{
-
-document.body.style.cursor="crosshair"
-
-document.addEventListener("mousedown",()=>drawing=true)
-
-document.addEventListener("mouseup",()=>drawing=false)
-
-document.addEventListener("mousemove",e=>{
-
-if(!drawing)return
-
-const dot=document.createElement("div")
-
-dot.style.position="fixed"
-dot.style.left=e.clientX+"px"
-dot.style.top=e.clientY+"px"
-dot.style.width="6px"
-dot.style.height="6px"
-dot.style.background="red"
-dot.style.borderRadius="50%"
-dot.style.pointerEvents="none"
-dot.style.zIndex="999999"
-
-document.body.appendChild(dot)
-
-})
-
-})
-
-/* ========= brightness ========= */
-
-btn("brightness_6",()=>{
-
-const slider=document.createElement("input")
-
-slider.type="range"
-slider.min="0.3"
-slider.max="2"
-slider.step="0.1"
-slider.value="1"
-
-slider.style.position="fixed"
-slider.style.left="80px"
-slider.style.top="50%"
-slider.style.zIndex="999999"
-
-document.body.appendChild(slider)
-
-slider.oninput=()=>{
-
-document.body.style.filter=`brightness(${slider.value})`
+dock.appendChild(b);
 
 }
 
-})
-
-/* ========= screenshot ========= */
+/* ------------------ SCREENSHOT ------------------ */
 
 btn("photo_camera",async()=>{
 
 if(!window.html2canvas){
-alert("loading screenshot library")
-return
+
+const s=document.createElement("script");
+s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+document.body.appendChild(s);
+
+alert("loading screenshot engine");
+
+return;
 }
 
-const canvas=await html2canvas(document.body)
+const canvas=await html2canvas(document.body);
 
-const a=document.createElement("a")
-a.href=canvas.toDataURL()
-a.download="screenshot.png"
-a.click()
+const a=document.createElement("a");
+a.href=canvas.toDataURL();
+a.download="screenshot.png";
+a.click();
 
-})
+});
 
-/* ========= page lock ========= */
+/* ------------------ BRIGHTNESS ------------------ */
+
+btn("brightness_6",()=>{
+
+const slider=document.createElement("input");
+slider.type="range";
+slider.min="0.3";
+slider.max="2";
+slider.step="0.1";
+slider.value="1";
+
+slider.style.position="fixed";
+slider.style.left="90px";
+slider.style.top="50%";
+
+document.body.appendChild(slider);
+
+slider.oninput=()=>{
+
+document.body.style.filter=`brightness(${slider.value})`;
+
+};
+
+});
+
+/* ------------------ LOCK ------------------ */
 
 btn("lock",()=>{
 
-const lock=document.createElement("div")
+const lock=document.createElement("div");
 
-lock.style.position="fixed"
-lock.style.top="0"
-lock.style.left="0"
-lock.style.width="100%"
-lock.style.height="100%"
-lock.style.background="black"
-lock.style.zIndex="999999"
+lock.style.position="fixed";
+lock.style.top="0";
+lock.style.left="0";
+lock.style.width="100%";
+lock.style.height="100%";
+lock.style.background="black";
+lock.style.zIndex="999999";
 
-document.body.appendChild(lock)
+document.body.appendChild(lock);
 
-})
+});
 
-/* ========= paste clipboard ========= */
-
-btn("content_paste",()=>{
-
-const text=localStorage.getItem("ns_clip")
-
-if(!text){
-alert("clipboard empty")
-return
-}
-
-navigator.clipboard.writeText(text)
-
-alert("clipboard copied")
-
-})
-
-/* ========= selection ========= */
-
-let selectionUI=null
-let aiPanel=null
-
-document.addEventListener("mouseup",()=>{
-
-const text=window.getSelection().toString().trim()
-
-if(!text){
-
-if(selectionUI){
-selectionUI.remove()
-selectionUI=null
-}
-
-return
-}
-
-/* save shared clipboard */
-
-localStorage.setItem("ns_clip",text)
-
-/* remove old */
-
-if(selectionUI) selectionUI.remove()
-
-const range=window.getSelection().getRangeAt(0)
-const rect=range.getBoundingClientRect()
-
-selectionUI=document.createElement("div")
-selectionUI.className="ns-selection"
-
-selectionUI.innerHTML=`
-<button id="nsSearch">Search</button>
-<button id="nsAI">AI</button>
-<button id="nsCopy">Copy</button>
-`
-
-document.body.appendChild(selectionUI)
-
-selectionUI.style.left=rect.left+"px"
-selectionUI.style.top=(rect.top-40)+"px"
-
-/* search */
-
-document.getElementById("nsSearch").onclick=()=>{
-
-window.open(
-"https://www.google.com/search?q="+encodeURIComponent(text)
-)
-
-}
-
-/* copy */
-
-document.getElementById("nsCopy").onclick=()=>{
-
-navigator.clipboard.writeText(text)
-
-}
-
-/* ai */
-
-document.getElementById("nsAI").onclick=()=>{
-
-showAI(text)
-
-}
-
-})
-
-/* ========= ai summary ========= */
-
-function showAI(text){
-
-if(aiPanel) aiPanel.remove()
-
-aiPanel=document.createElement("div")
-aiPanel.className="ns-ai"
-
-aiPanel.innerHTML="<b>AI Summary</b><br>generating..."
-
-document.body.appendChild(aiPanel)
-
-setTimeout(()=>{
-
-aiPanel.innerHTML="<b>AI Summary</b><br><br>"+text.slice(0,200)+"..."
-
-},600)
-
-}
-
-/* ========= click outside close ========= */
-
-document.addEventListener("mousedown",(e)=>{
-
-if(selectionUI && !selectionUI.contains(e.target)){
-selectionUI.remove()
-selectionUI=null
-}
-
-if(aiPanel && !aiPanel.contains(e.target)){
-aiPanel.remove()
-aiPanel=null
-}
-
-})
-
-/* ========= adblock ========= */
+/* ------------------ AD BLOCK ------------------ */
 
 function removeAds(){
 
-const selectors=[
-
+const list=[
 "[id*=ad]",
 "[class*=ad]",
 "[class*=banner]",
 "[class*=sponsor]",
 "iframe[src*=ads]",
-"iframe[src*=doubleclick]",
-"iframe[src*=googlesyndication]"
+"iframe[src*=doubleclick]"
+];
 
-]
-
-selectors.forEach(sel=>{
-
-document.querySelectorAll(sel).forEach(e=>e.remove())
-
-})
+list.forEach(s=>{
+document.querySelectorAll(s).forEach(e=>e.remove());
+});
 
 }
 
-removeAds()
-setInterval(removeAds,3000)
+removeAds();
+setInterval(removeAds,3000);
 
-})()
+/* ------------------ TEXT SELECT ------------------ */
+
+let selectUI;
+
+document.addEventListener("mouseup",()=>{
+
+const text=window.getSelection().toString().trim();
+
+if(!text){
+
+if(selectUI)selectUI.remove();
+return;
+
+}
+
+const range=window.getSelection().getRangeAt(0);
+const rect=range.getBoundingClientRect();
+
+selectUI=document.createElement("div");
+selectUI.className="ns-select";
+
+selectUI.innerHTML=`
+<button id="nsSearch">Search</button>
+<button id="nsWiki">Wiki</button>
+<button id="nsCopy">Copy</button>
+<button id="nsAI">AI</button>
+`;
+
+document.body.appendChild(selectUI);
+
+selectUI.style.left=rect.left+"px";
+selectUI.style.top=(rect.top-40)+"px";
+
+/* search */
+
+document.getElementById("nsSearch").onclick=()=>{
+
+window.open("https://google.com/search?q="+encodeURIComponent(text));
+
+};
+
+/* wiki */
+
+document.getElementById("nsWiki").onclick=()=>{
+
+window.open("https://ja.wikipedia.org/wiki/"+encodeURIComponent(text));
+
+};
+
+/* copy */
+
+document.getElementById("nsCopy").onclick=()=>{
+
+navigator.clipboard.writeText(text);
+
+};
+
+/* ai */
+
+document.getElementById("nsAI").onclick=()=>{
+
+ai(text);
+
+};
+
+});
+
+/* ------------------ AI ------------------ */
+
+function ai(text){
+
+let panel=document.querySelector(".ns-ai");
+
+if(panel)panel.remove();
+
+panel=document.createElement("div");
+panel.className="ns-ai";
+
+panel.innerHTML="<b>AI Summary</b><br>Generating...";
+
+document.body.appendChild(panel);
+
+setTimeout(()=>{
+
+panel.innerHTML="<b>AI Summary</b><br><br>"+text.slice(0,200)+"...";
+
+},700);
+
+}
+
+/* ------------------ COMMAND ------------------ */
+
+document.addEventListener("keydown",e=>{
+
+if(e.ctrlKey && e.key==="k"){
+
+alert(`NS TOOL
+
+📸 screenshot
+🌙 brightness
+🔎 search
+🧠 AI summary
+`);
+
+}
+
+});
+
+})();
