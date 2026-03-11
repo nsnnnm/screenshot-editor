@@ -12,7 +12,7 @@ const shadow=root.attachShadow({mode:"open"})
 /* style */
 const style=document.createElement("link")
 style.rel="stylesheet"
-style.href="https://ns-cloud-tool.pages.dev/style.css"
+style.href="https://ns-cloud-screenshot.pages.dev/style.css"
 shadow.appendChild(style)
 
 /* bar */
