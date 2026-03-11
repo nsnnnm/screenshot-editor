@@ -1,114 +1,64 @@
-window.NSTOOL = {};
+if(window.nsToolLoaded)return;
+window.nsToolLoaded=true;
 
-(function(){
+/* ---------- load css ---------- */
 
-/* ------------------ ICON ------------------ */
+const css=document.createElement("link");
+css.rel="stylesheet";
+css.href="https://ns-cloud-screenshot.pages.dev/style.css";
+document.head.appendChild(css);
+
+/* ---------- icons ---------- */
 
 const icon=document.createElement("link");
 icon.rel="stylesheet";
 icon.href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded";
 document.head.appendChild(icon);
 
-/* ------------------ CSS ------------------ */
+/* ---------- html2canvas ---------- */
 
-const css=`
-.ns-dock{
-position:fixed;
-left:10px;
-top:50%;
-transform:translateY(-50%);
-display:flex;
-flex-direction:column;
-gap:12px;
-padding:14px;
-background:rgba(30,30,30,.65);
-backdrop-filter:blur(20px);
-border-radius:22px;
-z-index:999999;
+if(!window.html2canvas){
+const s=document.createElement("script");
+s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+document.head.appendChild(s);
 }
 
-.ns-btn{
-width:46px;
-height:46px;
-display:flex;
-align-items:center;
-justify-content:center;
-border-radius:14px;
-background:rgba(255,255,255,.08);
-cursor:pointer;
-transition:all .15s;
-}
-
-.ns-btn:hover{
-transform:scale(1.45);
-background:rgba(255,255,255,.25);
-}
-
-.ns-btn span{
-font-family:'Material Symbols Rounded';
-color:white;
-font-size:24px;
-}
-
-.ns-select{
-position:absolute;
-background:#111;
-color:white;
-padding:6px 8px;
-border-radius:10px;
-display:flex;
-gap:6px;
-z-index:999999;
-}
-
-.ns-ai{
-position:fixed;
-right:20px;
-bottom:20px;
-width:300px;
-background:#111;
-color:white;
-padding:14px;
-border-radius:12px;
-z-index:999999;
-}
-
-`;
-const style=document.createElement("style");
-style.innerHTML=css;
-document.head.appendChild(style);
-
-/* ------------------ DOCK ------------------ */
+/* ---------- dock ---------- */
 
 const dock=document.createElement("div");
 dock.className="ns-dock";
 document.body.appendChild(dock);
 
-/* ------------------ BTN ------------------ */
+/* ---------- flash ---------- */
+
+const flash=document.createElement("div");
+flash.className="ns-flash";
+document.body.appendChild(flash);
+
+/* ---------- button creator ---------- */
 
 function btn(icon,fn){
 
 const b=document.createElement("div");
 b.className="ns-btn";
+
 b.innerHTML=`<span class="material-symbols-rounded">${icon}</span>`;
+
 b.onclick=fn;
 
 dock.appendChild(b);
 
 }
 
-/* ------------------ SCREENSHOT ------------------ */
+/* ---------- screenshot ---------- */
 
 btn("photo_camera",async()=>{
 
+flash.style.opacity="1";
+setTimeout(()=>flash.style.opacity="0",120);
+
 if(!window.html2canvas){
-
-const s=document.createElement("script");
-s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
-document.body.appendChild(s);
-
 alert("loading screenshot engine");
-
 return;
 }
 
@@ -121,20 +71,52 @@ a.click();
 
 });
 
-/* ------------------ BRIGHTNESS ------------------ */
+/* ---------- marker ---------- */
+
+let drawing=false;
+
+btn("draw",()=>{
+
+document.body.style.cursor="crosshair";
+
+document.onmousedown=()=>drawing=true;
+document.onmouseup=()=>drawing=false;
+
+document.onmousemove=e=>{
+
+if(!drawing)return;
+
+const dot=document.createElement("div");
+
+dot.style.position="fixed";
+dot.style.left=e.clientX+"px";
+dot.style.top=e.clientY+"px";
+dot.style.width="6px";
+dot.style.height="6px";
+dot.style.background="red";
+dot.style.borderRadius="50%";
+dot.style.pointerEvents="none";
+dot.style.zIndex="999999";
+
+document.body.appendChild(dot);
+
+};
+
+});
+
+/* ---------- brightness ---------- */
 
 btn("brightness_6",()=>{
 
 const slider=document.createElement("input");
+
 slider.type="range";
 slider.min="0.3";
 slider.max="2";
 slider.step="0.1";
 slider.value="1";
 
-slider.style.position="fixed";
-slider.style.left="90px";
-slider.style.top="50%";
+slider.className="ns-slider";
 
 document.body.appendChild(slider);
 
@@ -146,49 +128,37 @@ document.body.style.filter=`brightness(${slider.value})`;
 
 });
 
-/* ------------------ LOCK ------------------ */
+/* ---------- lock ---------- */
 
 btn("lock",()=>{
 
 const lock=document.createElement("div");
 
-lock.style.position="fixed";
-lock.style.top="0";
-lock.style.left="0";
-lock.style.width="100%";
-lock.style.height="100%";
-lock.style.background="black";
-lock.style.zIndex="999999";
+lock.className="ns-lock";
 
 document.body.appendChild(lock);
 
 });
 
-/* ------------------ AD BLOCK ------------------ */
+/* ---------- clipboard ---------- */
 
-function removeAds(){
+btn("content_paste",()=>{
 
-const list=[
-"[id*=ad]",
-"[class*=ad]",
-"[class*=banner]",
-"[class*=sponsor]",
-"iframe[src*=ads]",
-"iframe[src*=doubleclick]"
-];
+const t=localStorage.getItem("ns_clip");
 
-list.forEach(s=>{
-document.querySelectorAll(s).forEach(e=>e.remove());
-});
-
+if(!t){
+alert("clipboard empty");
+return;
 }
 
-removeAds();
-setInterval(removeAds,3000);
+navigator.clipboard.writeText(t);
 
-/* ------------------ TEXT SELECT ------------------ */
+});
+
+/* ---------- selection ui ---------- */
 
 let selectUI;
+let aiPanel;
 
 document.addEventListener("mouseup",()=>{
 
@@ -196,22 +166,31 @@ const text=window.getSelection().toString().trim();
 
 if(!text){
 
-if(selectUI)selectUI.remove();
-return;
-
+if(selectUI){
+selectUI.remove();
+selectUI=null;
 }
+
+return;
+}
+
+localStorage.setItem("ns_clip",text);
 
 const range=window.getSelection().getRangeAt(0);
 const rect=range.getBoundingClientRect();
 
+if(selectUI)selectUI.remove();
+
 selectUI=document.createElement("div");
-selectUI.className="ns-select";
+selectUI.className="ns-selectUI";
 
 selectUI.innerHTML=`
+
 <button id="nsSearch">Search</button>
 <button id="nsWiki">Wiki</button>
 <button id="nsCopy">Copy</button>
 <button id="nsAI">AI</button>
+
 `;
 
 document.body.appendChild(selectUI);
@@ -247,51 +226,78 @@ navigator.clipboard.writeText(text);
 
 document.getElementById("nsAI").onclick=()=>{
 
-ai(text);
+showAI(text);
 
 };
 
 });
 
-/* ------------------ AI ------------------ */
+/* ---------- AI ---------- */
 
-function ai(text){
+function showAI(text){
 
-let panel=document.querySelector(".ns-ai");
+if(aiPanel)aiPanel.remove();
 
-if(panel)panel.remove();
+aiPanel=document.createElement("div");
+aiPanel.className="ns-ai";
 
-panel=document.createElement("div");
-panel.className="ns-ai";
+aiPanel.innerHTML="<b>AI Summary</b><br>Generating...";
 
-panel.innerHTML="<b>AI Summary</b><br>Generating...";
-
-document.body.appendChild(panel);
+document.body.appendChild(aiPanel);
 
 setTimeout(()=>{
 
-panel.innerHTML="<b>AI Summary</b><br><br>"+text.slice(0,200)+"...";
+aiPanel.innerHTML="<b>AI Summary</b><br><br>"+text.slice(0,250)+"...";
 
-},700);
+},600);
 
 }
 
-/* ------------------ COMMAND ------------------ */
+/* ---------- auto close ui ---------- */
 
-document.addEventListener("keydown",e=>{
+document.addEventListener("mousedown",(e)=>{
 
-if(e.ctrlKey && e.key==="k"){
+if(selectUI && !selectUI.contains(e.target)){
+selectUI.remove();
+selectUI=null;
+}
 
-alert(`NS TOOL
-
-📸 screenshot
-🌙 brightness
-🔎 search
-🧠 AI summary
-`);
-
+if(aiPanel && !aiPanel.contains(e.target)){
+aiPanel.remove();
+aiPanel=null;
 }
 
 });
 
-})();
+/* ---------- adblock ---------- */
+
+function removeAds(){
+
+const selectors=[
+"[id*=ad]",
+"[class*=ad]",
+"[class*=banner]",
+"[class*=promo]",
+"[class*=sponsor]",
+"iframe[src*=ads]",
+"iframe[src*=doubleclick]",
+"iframe[src*=googlesyndication]"
+];
+
+selectors.forEach(s=>{
+document.querySelectorAll(s).forEach(e=>e.remove());
+});
+
+}
+
+removeAds();
+setInterval(removeAds,4000);
+
+/* ---------- page ai ---------- */
+
+btn("auto_awesome",()=>{
+
+const text=document.body.innerText.slice(0,1500);
+showAI(text);
+
+});
