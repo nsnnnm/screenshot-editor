@@ -1,26 +1,30 @@
 (async()=>{
 
-/* icon font */
+/* ===== icon font ===== */
 
 const iconFont=document.createElement("link")
 iconFont.rel="stylesheet"
 iconFont.href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
 document.head.appendChild(iconFont)
 
-/* css */
+/* ===== css ===== */
 
 const css=document.createElement("link")
 css.rel="stylesheet"
 css.href="https://ns-cloud-screenshot.pages.dev/tool.css"
 document.head.appendChild(css)
 
-/* dock */
+/* ===== screenshot lib ===== */
+
+const s=document.createElement("script")
+s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
+document.head.appendChild(s)
+
+/* ===== dock ===== */
 
 const bar=document.createElement("div")
 bar.className="ns-bar"
 document.body.appendChild(bar)
-
-/* open tab */
 
 const open=document.createElement("div")
 open.className="ns-open"
@@ -28,13 +32,11 @@ open.innerHTML='<span class="material-symbols-rounded">menu</span>'
 document.body.appendChild(open)
 
 open.onclick=()=>{
-
 bar.style.display="flex"
 open.style.display="none"
-
 }
 
-/* button creator */
+/* ===== button creator ===== */
 
 function btn(icon,click){
 
@@ -49,107 +51,150 @@ bar.appendChild(b)
 
 }
 
-/* close */
+/* ===== close ===== */
 
 btn("close",()=>{
-
 bar.style.display="none"
 open.style.display="flex"
+})
+
+/* ===== marker ===== */
+
+let drawing=false
+
+btn("draw",()=>{
+
+document.body.style.cursor="crosshair"
+
+document.addEventListener("mousedown",()=>drawing=true)
+
+document.addEventListener("mouseup",()=>drawing=false)
+
+document.addEventListener("mousemove",e=>{
+
+if(!drawing)return
+
+const dot=document.createElement("div")
+
+dot.style.position="fixed"
+dot.style.left=e.clientX+"px"
+dot.style.top=e.clientY+"px"
+dot.style.width="6px"
+dot.style.height="6px"
+dot.style.background="red"
+dot.style.borderRadius="50%"
+dot.style.pointerEvents="none"
+dot.style.zIndex="999999"
+
+document.body.appendChild(dot)
 
 })
 
-/* hide elements */
-
-btn("visibility_off",()=>{
-
-document.querySelectorAll("img,video").forEach(e=>{
-
-e.style.visibility="hidden"
-
 })
 
-})
-
-/* brightness */
+/* ===== brightness ===== */
 
 btn("brightness_6",()=>{
 
-const s=document.createElement("input")
-s.type="range"
-s.min="0.3"
-s.max="2"
-s.step="0.1"
-s.value="1"
-s.className="ns-slider"
+const slider=document.createElement("input")
 
-document.body.appendChild(s)
+slider.type="range"
+slider.min="0.3"
+slider.max="2"
+slider.step="0.1"
+slider.value="1"
+slider.className="ns-slider"
 
-s.oninput=()=>{
+document.body.appendChild(slider)
 
-document.body.style.filter=`brightness(${s.value})`
+slider.oninput=()=>{
+
+document.body.style.filter=`brightness(${slider.value})`
 
 }
 
 })
 
-/* screenshot */
+/* ===== screenshot ===== */
 
 btn("photo_camera",async()=>{
 
-const canvas=document.createElement("canvas")
+if(!window.html2canvas){
 
-canvas.width=document.documentElement.scrollWidth
-canvas.height=document.documentElement.scrollHeight
+alert("スクショライブラリ読み込み中")
+return
 
-const ctx=canvas.getContext("2d")
+}
 
-ctx.fillStyle="white"
-ctx.fillRect(0,0,canvas.width,canvas.height)
+const canvas=await html2canvas(document.body)
 
-alert("ブラウザ制限で完全スクショは不可。拡張機能なら可能です。")
+const a=document.createElement("a")
+a.href=canvas.toDataURL()
+a.download="screenshot.png"
+a.click()
 
 })
 
-/* lock */
+/* ===== lock page ===== */
 
 btn("lock",()=>{
 
-const d=document.createElement("div")
+const lock=document.createElement("div")
 
-d.style.position="fixed"
-d.style.top="0"
-d.style.left="0"
-d.style.width="100%"
-d.style.height="100%"
-d.style.background="black"
-d.style.zIndex="999999"
+lock.style.position="fixed"
+lock.style.top="0"
+lock.style.left="0"
+lock.style.width="100%"
+lock.style.height="100%"
+lock.style.background="black"
+lock.style.zIndex="999999"
 
-document.body.appendChild(d)
+document.body.appendChild(lock)
 
 })
 
-/* text selection */
+/* ===== selection UI ===== */
+
+let selectionUI=null
+let aiPanel=null
 
 document.addEventListener("mouseup",()=>{
 
 const text=window.getSelection().toString().trim()
 
-if(!text)return
+if(!text){
 
-const box=document.createElement("div")
-box.className="ns-selection"
+if(selectionUI){
+selectionUI.remove()
+selectionUI=null
+}
 
-box.innerHTML=`
+return
+}
+
+/* remove old */
+
+if(selectionUI){
+selectionUI.remove()
+}
+
+const range=window.getSelection().getRangeAt(0)
+const rect=range.getBoundingClientRect()
+
+selectionUI=document.createElement("div")
+selectionUI.className="ns-selection"
+
+selectionUI.innerHTML=`
 <button id="nsSearch">Search</button>
 <button id="nsAI">AI</button>
 `
 
-document.body.appendChild(box)
+document.body.appendChild(selectionUI)
 
-const r=window.getSelection().getRangeAt(0).getBoundingClientRect()
+selectionUI.style.left=rect.left+"px"
+selectionUI.style.top=(rect.top-40)+"px"
 
-box.style.left=r.left+"px"
-box.style.top=(r.top-40)+"px"
+/* search */
 
 document.getElementById("nsSearch").onclick=()=>{
 
@@ -159,36 +204,61 @@ window.open(
 
 }
 
+/* ai */
+
 document.getElementById("nsAI").onclick=()=>{
 
-ai(text)
+showAI(text)
 
 }
 
-setTimeout(()=>box.remove(),5000)
-
 })
 
-/* AI summary */
+/* ===== AI summary ===== */
 
-function ai(text){
+function showAI(text){
 
-const p=document.createElement("div")
-p.className="ns-ai"
+if(aiPanel) aiPanel.remove()
 
-p.innerHTML="<b>AI Summary</b><br>生成中..."
+aiPanel=document.createElement("div")
+aiPanel.className="ns-ai"
 
-document.body.appendChild(p)
+aiPanel.innerHTML="<b>AI Summary</b><br>生成中..."
+
+document.body.appendChild(aiPanel)
 
 setTimeout(()=>{
 
 let short=text.slice(0,200)
 
-p.innerHTML="<b>AI Summary</b><br><br>"+short+"..."
+aiPanel.innerHTML=`
+<b>AI Summary</b><br><br>
+${short}...
+`
 
 },600)
 
 }
+
+/* ===== click outside remove UI ===== */
+
+document.addEventListener("mousedown",(e)=>{
+
+if(selectionUI && !selectionUI.contains(e.target)){
+
+selectionUI.remove()
+selectionUI=null
+
+}
+
+if(aiPanel && !aiPanel.contains(e.target)){
+
+aiPanel.remove()
+aiPanel=null
+
+}
+
+})
 
 /* ===== ad blocker ===== */
 
@@ -200,8 +270,11 @@ const selectors=[
 "[class*=ad]",
 "[class*=ads]",
 "[class*=banner]",
+"[class*=sponsor]",
+"[class*=promo]",
 "iframe[src*=ads]",
 "iframe[src*=doubleclick]",
+"iframe[src*=googlesyndication]",
 "iframe[src*=adservice]"
 
 ]
@@ -218,10 +291,42 @@ e.remove()
 
 }
 
-/* run adblock */
-
 removeAds()
+setInterval(removeAds,3000)
 
-setInterval(removeAds,4000)
+/* ===== command palette ===== */
+
+document.addEventListener("keydown",e=>{
+
+if(e.ctrlKey && e.key==="k"){
+
+e.preventDefault()
+
+const box=document.createElement("div")
+
+box.style.position="fixed"
+box.style.top="50%"
+box.style.left="50%"
+box.style.transform="translate(-50%,-50%)"
+box.style.background="black"
+box.style.color="white"
+box.style.padding="20px"
+box.style.borderRadius="12px"
+box.style.zIndex="999999"
+
+box.innerHTML=`
+<b>Command</b><br><br>
+1 Screenshot<br>
+2 Marker<br>
+3 Brightness<br>
+`
+
+document.body.appendChild(box)
+
+setTimeout(()=>box.remove(),3000)
+
+}
+
+})
 
 })()
