@@ -1,70 +1,103 @@
 (function(){
 
-if(window.__nsdock)return
-window.__nsdock=true
+if(window.__nsDock)return
+window.__nsDock=true
+
+/* root */
 
 const root=document.createElement("div")
-root.style="position:fixed;z-index:2147483647"
+root.style="position:fixed;left:0;top:0;z-index:2147483647"
 document.body.appendChild(root)
 
 const shadow=root.attachShadow({mode:"open"})
 
-/* style */
-const style=document.createElement("link")
-style.rel="stylesheet"
-style.href="https://ns-cloud-screenshot.pages.dev/style.css"
-shadow.appendChild(style)
+/* css */
+
+const css=document.createElement("link")
+css.rel="stylesheet"
+css.href="https://ns-cloud-screenshot.pages.dev/tool.css"
+
+shadow.appendChild(css)
 
 /* bar */
+
 const bar=document.createElement("div")
-bar.className="bar"
+bar.className="ns-bar"
 shadow.appendChild(bar)
 
 function add(icon,fn){
+
 let b=document.createElement("div")
-b.className="btn"
-b.textContent=icon
+b.className="ns-btn"
+b.innerHTML=icon
 b.onclick=fn
+
 bar.appendChild(b)
+
 }
 
 /* close */
-add("❌",()=>{
+
+add("✕",()=>{
 root.remove()
 })
 
 /* hide */
-add("👁",()=>{
+
+add("⤺",()=>{
 bar.style.display="none"
-setTimeout(()=>bar.style.display="flex",2000)
+openBtn.style.display="flex"
 })
 
-/* brightness slider */
-const brightBox=document.createElement("div")
-brightBox.className="btn"
-brightBox.textContent="☀"
-bar.appendChild(brightBox)
+/* open */
+
+const openBtn=document.createElement("div")
+openBtn.className="ns-open"
+openBtn.innerHTML="❯"
+openBtn.style.display="none"
+
+openBtn.onclick=()=>{
+bar.style.display="flex"
+openBtn.style.display="none"
+}
+
+shadow.appendChild(openBtn)
+
+/* brightness */
+
+const brightBtn=document.createElement("div")
+brightBtn.className="ns-btn"
+brightBtn.innerHTML="☀"
+bar.appendChild(brightBtn)
+
+const sliderBox=document.createElement("div")
+sliderBox.className="ns-sliderbox"
+sliderBox.style.display="none"
 
 const slider=document.createElement("input")
 slider.type="range"
-slider.min="0.4"
+slider.min="0.3"
 slider.max="2"
 slider.step="0.1"
 slider.value="1"
-slider.className="slider"
-slider.style.display="none"
-
-brightBox.onclick=()=>{
-slider.style.display=
-slider.style.display==="none"?"block":"none"
-}
 
 slider.oninput=()=>{
 document.documentElement.style.filter=
 `brightness(${slider.value})`
 }
 
-bar.appendChild(slider)
+sliderBox.appendChild(slider)
+shadow.appendChild(sliderBox)
+
+brightBtn.onclick=()=>{
+
+sliderBox.style.display=
+sliderBox.style.display==="none"?"block":"none"
+
+sliderBox.style.top=
+brightBtn.getBoundingClientRect().top+"px"
+
+}
 
 /* screenshot */
 
@@ -74,12 +107,16 @@ let s=document.createElement("script")
 s.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"
 
 s.onload=()=>{
+
 html2canvas(document.body).then(canvas=>{
+
 let a=document.createElement("a")
 a.href=canvas.toDataURL()
 a.download="screenshot.png"
 a.click()
+
 })
+
 }
 
 document.head.appendChild(s)
@@ -100,16 +137,16 @@ lock.style=`
 position:fixed;
 inset:0;
 background:black;
-z-index:999999999;
 display:flex;
 align-items:center;
 justify-content:center;
+z-index:999999999;
 `
 
 let input=document.createElement("input")
 input.type="password"
 input.placeholder="PIN"
-input.style="font-size:22px;padding:10px"
+input.style="font-size:24px;padding:12px"
 
 lock.appendChild(input)
 document.body.appendChild(lock)
@@ -135,28 +172,19 @@ let text=window.getSelection().toString()
 if(text.length<2)return
 
 let btn=document.createElement("div")
-
-btn.textContent="🔎"
-
-btn.style=`
-position:fixed;
-bottom:20px;
-right:20px;
-background:white;
-padding:10px;
-border-radius:12px;
-font-size:22px;
-cursor:pointer;
-z-index:999999999;
-`
+btn.className="ns-search"
+btn.innerHTML="🔎"
 
 btn.onclick=()=>{
+
 window.open(
 "https://www.google.com/search?q="+
 encodeURIComponent(text),
 "_blank"
 )
+
 btn.remove()
+
 }
 
 document.body.appendChild(btn)
