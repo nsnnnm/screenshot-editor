@@ -1,5 +1,7 @@
-if(window.nsToolLoaded)return;
-window.nsToolLoaded=true;
+(function(){
+
+if(window.nsToolLoaded) return;
+window.nsToolLoaded = true;
 
 /* ---------- load css ---------- */
 
@@ -133,7 +135,6 @@ document.body.style.filter=`brightness(${slider.value})`;
 btn("lock",()=>{
 
 const lock=document.createElement("div");
-
 lock.className="ns-lock";
 
 document.body.appendChild(lock);
@@ -152,120 +153,6 @@ return;
 }
 
 navigator.clipboard.writeText(t);
-
-});
-
-/* ---------- selection ui ---------- */
-
-let selectUI;
-let aiPanel;
-
-document.addEventListener("mouseup",()=>{
-
-const text=window.getSelection().toString().trim();
-
-if(!text){
-
-if(selectUI){
-selectUI.remove();
-selectUI=null;
-}
-
-return;
-}
-
-localStorage.setItem("ns_clip",text);
-
-const range=window.getSelection().getRangeAt(0);
-const rect=range.getBoundingClientRect();
-
-if(selectUI)selectUI.remove();
-
-selectUI=document.createElement("div");
-selectUI.className="ns-selectUI";
-
-selectUI.innerHTML=`
-
-<button id="nsSearch">Search</button>
-<button id="nsWiki">Wiki</button>
-<button id="nsCopy">Copy</button>
-<button id="nsAI">AI</button>
-
-`;
-
-document.body.appendChild(selectUI);
-
-selectUI.style.left=rect.left+"px";
-selectUI.style.top=(rect.top-40)+"px";
-
-/* search */
-
-document.getElementById("nsSearch").onclick=()=>{
-
-window.open("https://google.com/search?q="+encodeURIComponent(text));
-
-};
-
-/* wiki */
-
-document.getElementById("nsWiki").onclick=()=>{
-
-window.open("https://ja.wikipedia.org/wiki/"+encodeURIComponent(text));
-
-};
-
-/* copy */
-
-document.getElementById("nsCopy").onclick=()=>{
-
-navigator.clipboard.writeText(text);
-
-};
-
-/* ai */
-
-document.getElementById("nsAI").onclick=()=>{
-
-showAI(text);
-
-};
-
-});
-
-/* ---------- AI ---------- */
-
-function showAI(text){
-
-if(aiPanel)aiPanel.remove();
-
-aiPanel=document.createElement("div");
-aiPanel.className="ns-ai";
-
-aiPanel.innerHTML="<b>AI Summary</b><br>Generating...";
-
-document.body.appendChild(aiPanel);
-
-setTimeout(()=>{
-
-aiPanel.innerHTML="<b>AI Summary</b><br><br>"+text.slice(0,250)+"...";
-
-},600);
-
-}
-
-/* ---------- auto close ui ---------- */
-
-document.addEventListener("mousedown",(e)=>{
-
-if(selectUI && !selectUI.contains(e.target)){
-selectUI.remove();
-selectUI=null;
-}
-
-if(aiPanel && !aiPanel.contains(e.target)){
-aiPanel.remove();
-aiPanel=null;
-}
 
 });
 
@@ -293,11 +180,4 @@ document.querySelectorAll(s).forEach(e=>e.remove());
 removeAds();
 setInterval(removeAds,4000);
 
-/* ---------- page ai ---------- */
-
-btn("auto_awesome",()=>{
-
-const text=document.body.innerText.slice(0,1500);
-showAI(text);
-
-});
+})();
